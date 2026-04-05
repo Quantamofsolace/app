@@ -1,0 +1,57 @@
+name: Deploy Python App to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_DEFAULT_REGION: ap-south-1
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+
+          echo "🚀 Starting Deployment..."
+
+          # Install dependencies (only first time)
+          sudo apt update -y
+          sudo apt install -y python3-pip git
+
+          # Clone repo if not exists
+          if [ ! -d "/home/ubuntu/app" ]; then
+            git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
+          fi
+
+          cd /home/ubuntu/app
+
+          # Pull latest code
+          git pull origin main
+
+          # Install Python dependencies
+          pip3 install --user -r requirements.txt
+
+          # Kill old app if running
+          pkill -f app.py || true
+
+          # Run app in background
+          nohup python3 app/app.py > output.log 2>&1 &
+
+          echo "✅ Deployment Completed!"
+
+        EOF
