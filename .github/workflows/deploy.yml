@@ -1,45 +1,50 @@
-name: Deploy to EC2
+name: Deploy Python App to EC2
+
 on:
-  # push:
-  #   branches:
-  #     - main
-  workflow_dispatch: 
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e   # 🔥 FAIL FAST (important for debugging)
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-            echo "===== CONNECTED TO EC2 ====="
-            whoami
-            pwd
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
 
-            echo "===== INSTALLING DEPENDENCIES ====="
-            sudo apt update -y
-            sudo apt install -y python3 python3-pip git
+        echo "===== DEBUG SSH FILE ====="
+        ls -la ~/.ssh
+        cat ~/.ssh/id_rsa | head -n 2
 
-            echo "===== CLEANING OLD APP ====="
-            rm -rf /home/ubuntu/app
+    - name: Add EC2 to known hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-            echo "===== CLONING REPO ====="
-            git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
+    - name: Deploy to EC2
+      run: |
+        ssh -vvv -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
 
-            echo "===== MOVING INTO DIRECTORY ====="
-            cd /home/ubuntu/app
-            ls -l   # 🔥 DEBUG
+          echo "CONNECTED TO EC2"
 
-            echo "===== INSTALLING PYTHON DEPENDENCIES ====="
-            pip3 install --user -r requirements.txt
+          sudo apt update -y
+          sudo apt install -y python3 python3-pip git
 
-            echo "===== STOPPING OLD APP ====="
-            pkill -f app.py || true
+          rm -rf /home/ubuntu/app
+          git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
 
-            echo "===== STARTING APP ====="
-            nohup python3 app.py > output.log 2>&1 &
+          cd /home/ubuntu/app
 
-            echo "===== DONE ====="
-          EOF
+          pip3 install --user -r requirements.txt
+
+          pkill -f app.py || true
+
+          nohup python3 app.py > output.log 2>&1 &
+
+        EOF
