@@ -1,5 +1,4 @@
-name: Deploy Python App to EC2
-
+name: Deploy to EC2
 on:
   push:
     branches:
@@ -8,48 +7,38 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    env:
-      AWS_DEFAULT_REGION: ap-south-1
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e   # 🔥 FAIL FAST (important for debugging)
 
-    - name: Setup SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+            echo "===== CONNECTED TO EC2 ====="
+            whoami
+            pwd
 
-    - name: Deploy to EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "===== INSTALLING DEPENDENCIES ====="
+            sudo apt update -y
+            sudo apt install -y python3 python3-pip git
 
-          echo "🚀 Starting Deployment..."
+            echo "===== CLEANING OLD APP ====="
+            rm -rf /home/ubuntu/app
 
-          # Install dependencies (safe even if already installed)
-          sudo apt update -y
-          sudo apt install -y python3 python3-pip git
+            echo "===== CLONING REPO ====="
+            git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
 
-          # Remove old repo (to avoid conflicts)
-          rm -rf /home/ubuntu/app
+            echo "===== MOVING INTO DIRECTORY ====="
+            cd /home/ubuntu/app
+            ls -l   # 🔥 DEBUG
 
-          # Clone using HTTPS (NO SSH REQUIRED)
-          git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
+            echo "===== INSTALLING PYTHON DEPENDENCIES ====="
+            pip3 install --user -r requirements.txt
 
-          cd /home/ubuntu/app
+            echo "===== STOPPING OLD APP ====="
+            pkill -f app.py || true
 
-          # Install Python dependencies
-          pip3 install --user -r requirements.txt
+            echo "===== STARTING APP ====="
+            nohup python3 app.py > output.log 2>&1 &
 
-          # Kill existing app if running
-          pkill -f app.py || true
-
-          # Run app in background
-          nohup python3 app.py > output.log 2>&1 &
-
-          echo "✅ Deployment Successful!"
-
-        EOF
+            echo "===== DONE ====="
+          EOF
