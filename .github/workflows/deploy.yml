@@ -29,29 +29,27 @@ jobs:
 
           echo "🚀 Starting Deployment..."
 
-          # Install dependencies (only first time)
+          # Install dependencies (safe even if already installed)
           sudo apt update -y
-          sudo apt install -y python3-pip git
+          sudo apt install -y python3 python3-pip git
 
-          # Clone repo if not exists
-          if [ ! -d "/home/ubuntu/app" ]; then
-            git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
-          fi
+          # Remove old repo (to avoid conflicts)
+          rm -rf /home/ubuntu/app
+
+          # Clone using HTTPS (NO SSH REQUIRED)
+          git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
 
           cd /home/ubuntu/app
-
-          # Pull latest code
-          git pull origin main
 
           # Install Python dependencies
           pip3 install --user -r requirements.txt
 
-          # Kill old app if running
+          # Kill existing app if running
           pkill -f app.py || true
 
           # Run app in background
-          nohup python3 app/app.py > output.log 2>&1 &
+          nohup python3 app.py > output.log 2>&1 &
 
-          echo "✅ Deployment Completed!"
+          echo "✅ Deployment Successful!"
 
         EOF
