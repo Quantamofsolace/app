@@ -3,7 +3,7 @@ name: Deploy Python App to EC2
 on:
   push:
     branches:
-      - main #
+      - main
 
 jobs:
   deploy:
@@ -19,32 +19,44 @@ jobs:
         echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
 
-        echo "===== DEBUG SSH FILE ====="
-        ls -la ~/.ssh
-        cat ~/.ssh/id_rsa | head -n 2
-
     - name: Add EC2 to known hosts
       run: |
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy to EC2
       run: |
-        ssh -vvv -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
 
-          echo "CONNECTED TO EC2"
+          echo "🚀 Connected to EC2"
 
+          # 🔥 Update system
           sudo apt update -y
+
+          # 🔥 Install Python, pip, git
           sudo apt install -y python3 python3-pip git
 
-          rm -rf /home/ubuntu/app
-          git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
+          # 🔥 Install Flask (system level - your working fix)
+          pip3 install --break-system-packages flask
+
+          # 🔥 Clone repo if not exists
+          if [ ! -d "/home/ubuntu/app" ]; then
+            git clone https://github.com/Quantamofsolace/app.git /home/ubuntu/app
+          fi
 
           cd /home/ubuntu/app
 
-          pip3 install --user -r requirements.txt
+          # 🔥 Pull latest code
+          git pull origin main
 
+          # 🔥 Install dependencies (requirements.txt)
+          pip3 install --break-system-packages -r requirements.txt
+
+          # 🔥 Stop old app
           pkill -f app.py || true
 
+          # 🔥 Start app
           nohup python3 app.py > output.log 2>&1 &
+
+          echo "✅ Deployment Completed Successfully"
 
         EOF
