@@ -8,52 +8,127 @@ def home():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>DevOps Deployed 🚀</title>
+        <title>Deployed System</title>
         <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Segoe UI', sans-serif;
+            }
+
             body {
-                background: linear-gradient(135deg, #1e3c72, #2a5298);
+                overflow-x: hidden;
+                background: black;
                 color: white;
-                font-family: Arial, sans-serif;
+            }
+
+            section {
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 text-align: center;
-                padding-top: 100px;
+                padding: 20px;
             }
-            h1 {
-                font-size: 50px;
-                margin-bottom: 10px;
+
+            .hero {
+                background: linear-gradient(120deg, #000000, #1a1a2e, #16213e);
+                animation: fadeIn 2s ease-in;
             }
-            p {
-                font-size: 20px;
-                opacity: 0.9;
-            }
-            .box {
-                background: rgba(255,255,255,0.1);
-                padding: 30px;
-                border-radius: 15px;
-                display: inline-block;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            }
-            .emoji {
+
+            .hero h1 {
                 font-size: 60px;
+                letter-spacing: 2px;
+                text-shadow: 0 0 20px rgba(0,255,255,0.7);
             }
-            .footer {
-                margin-top: 40px;
+
+            .hero p {
+                margin-top: 20px;
+                font-size: 20px;
+                opacity: 0.8;
+            }
+
+            .section2 {
+                background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
+            }
+
+            .section3 {
+                background: linear-gradient(120deg, #141e30, #243b55);
+            }
+
+            .card {
+                background: rgba(255,255,255,0.05);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 0 40px rgba(0,255,255,0.2);
+                transition: transform 0.5s ease;
+            }
+
+            .card:hover {
+                transform: scale(1.05);
+            }
+
+            h2 {
+                font-size: 40px;
+                margin-bottom: 20px;
+            }
+
+            p {
+                font-size: 18px;
+                opacity: 0.8;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(30px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .scroll {
+                position: absolute;
+                bottom: 20px;
                 font-size: 14px;
-                opacity: 0.7;
+                opacity: 0.6;
+                animation: bounce 2s infinite;
+            }
+
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(10px); }
             }
         </style>
     </head>
     <body>
 
-        <div class="box">
-            <div class="emoji">🔥🚀</div>
-            <h1>It Works!</h1>
-            <p>Your CI/CD pipeline just deployed this app like a boss 😎</p>
-            <p>GitHub → EC2 → LIVE 🎯</p>
-        </div>
+        <section class="hero">
+            <div>
+                <h1>DEPLOYED</h1>
+                <p>Continuous Integration • Continuous Delivery</p>
+                <div class="scroll">Scroll ↓</div>
+            </div>
+        </section>
 
-        <div class="footer">
-            Built with ❤️ using Flask + GitHub Actions + AWS
-        </div>
+        <section class="section2">
+            <div class="card">
+                <h2>Automation</h2>
+                <p>Code moves seamlessly from commit to deployment without manual intervention.</p>
+            </div>
+        </section>
+
+        <section class="section3">
+            <div class="card">
+                <h2>Scalability</h2>
+                <p>Built on cloud infrastructure, designed to scale and adapt dynamically.</p>
+            </div>
+        </section>
+
+        <section class="section2">
+            <div class="card">
+                <h2>Reliability</h2>
+                <p>Automated workflows ensure consistent and repeatable deployments.</p>
+            </div>
+        </section>
 
     </body>
     </html>
